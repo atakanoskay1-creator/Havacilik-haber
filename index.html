@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ATC Bilgi Portalı</title>
+  <meta name="description" content="Hava trafik kontrolörleri için havacılık bilgi portalı: akademik çalışmalar, mevzuat, meteoroloji ve kaynaklar.">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="#">
+        <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path fill="currentColor" d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>
+        <span>ATC Bilgi Portalı</span>
+      </a>
+      <nav class="tabs" role="tablist">
+        <button role="tab" data-tab="akademik" aria-selected="true">Akademik</button>
+        <button role="tab" data-tab="kaynaklar" aria-selected="false">Kaynaklar</button>
+        <button role="tab" data-tab="meteo" aria-selected="false">METAR/TAF</button>
+        <button role="tab" data-tab="favoriler" aria-selected="false">Kaydedilenler <span id="favCount" class="pill">0</span></button>
+      </nav>
+      <div class="clock" title="Koordineli Evrensel Zaman">
+        <span class="clock-label">UTC</span>
+        <span id="utcClock">--:--:--</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- AKADEMİK -->
+    <section id="tab-akademik" class="tab-panel" role="tabpanel">
+      <div class="hero">
+        <h1>Akademik çalışmalar</h1>
+        <p>Hava trafik kontrolü üzerine makale, bildiri ve tezleri arayın. Tam metni ücretli olan çalışmalar da listelenir; başlık, özet (varsa) ve yayıncı/DOI bağlantısı gösterilir. Açık erişimli sürüm bulunursa ayrıca işaretlenir.</p>
+      </div>
+
+      <form id="searchForm" class="search-form" autocomplete="off">
+        <div class="search-row">
+          <input id="q" type="search" placeholder="Örn. controller workload, remote tower, yorgunluk…" aria-label="Arama terimi">
+          <button type="submit" class="btn primary">Ara</button>
+        </div>
+        <div class="filters">
+          <label>Kaynak
+            <select id="source">
+              <option value="openalex">OpenAlex (önerilen)</option>
+              <option value="crossref">Crossref</option>
+            </select>
+          </label>
+          <label>Yıl (başlangıç)
+            <input id="yearFrom" type="number" min="1950" max="2100" placeholder="2015">
+          </label>
+          <label>Yıl (bitiş)
+            <input id="yearTo" type="number" min="1950" max="2100" placeholder="2026">
+          </label>
+          <label>Sıralama
+            <select id="sort">
+              <option value="relevance">İlgililik</option>
+              <option value="date">En yeni</option>
+              <option value="cited">En çok atıf</option>
+            </select>
+          </label>
+          <label>Erişim
+            <select id="access">
+              <option value="all">Tümü</option>
+              <option value="oa">Yalnızca açık erişim</option>
+              <option value="closed">Yalnızca kısıtlı erişim</option>
+            </select>
+          </label>
+          <label class="check"><input id="atcScope" type="checkbox" checked> ATC bağlamıyla sınırla</label>
+        </div>
+      </form>
+
+      <div class="chips" id="topicChips" aria-label="Hazır konular"></div>
+
+      <div id="status" class="status" aria-live="polite"></div>
+      <ol id="results" class="results"></ol>
+      <div class="pager">
+        <button id="prevPage" class="btn" disabled>← Önceki</button>
+        <span id="pageInfo"></span>
+        <button id="nextPage" class="btn" disabled>Sonraki →</button>
+      </div>
+
+      <aside class="card external-search">
+        <h2>Diğer veri tabanlarında aynı aramayı aç</h2>
+        <p class="muted">Bu siteler doğrudan gömülemez; aşağıdaki bağlantılar yukarıdaki arama terimiyle yeni sekmede açılır.</p>
+        <div id="externalLinks" class="link-grid"></div>
+      </aside>
+    </section>
+
+    <!-- KAYNAKLAR -->
+    <section id="tab-kaynaklar" class="tab-panel" role="tabpanel" hidden>
+      <div class="hero">
+        <h1>Kaynaklar</h1>
+        <p>Mevzuat, AIP, otoriteler, dergiler, haber siteleri ve eğitim materyalleri.</p>
+      </div>
+      <input id="resFilter" type="search" class="res-filter" placeholder="Kaynaklarda filtrele…" aria-label="Kaynaklarda filtrele">
+      <div id="resources"></div>
+    </section>
+
+    <!-- METEO -->
+    <section id="tab-meteo" class="tab-panel" role="tabpanel" hidden>
+      <div class="hero">
+        <h1>METAR / TAF</h1>
+        <p>ICAO meydan kodlarını girin (virgül veya boşlukla ayırın). Veriler aviationweather.gov üzerinden alınır; yalnızca bilgi amaçlıdır, operasyonel kullanım için resmi kaynakları esas alın.</p>
+      </div>
+      <form id="wxForm" class="search-form">
+        <div class="search-row">
+          <input id="icao" type="text" value="LTFM LTBA LTAC LTAI" aria-label="ICAO kodları" spellcheck="false">
+          <button type="submit" class="btn primary">Getir</button>
+        </div>
+      </form>
+      <div id="wxStatus" class="status" aria-live="polite"></div>
+      <div id="wxResults" class="wx-results"></div>
+    </section>
+
+    <!-- FAVORİLER -->
+    <section id="tab-favoriler" class="tab-panel" role="tabpanel" hidden>
+      <div class="hero">
+        <h1>Kaydedilen çalışmalar</h1>
+        <p>Bu tarayıcıda saklanır. Listeyi BibTeX olarak dışa aktarabilirsiniz.</p>
+      </div>
+      <div class="toolbar">
+        <button id="exportBib" class="btn">BibTeX indir</button>
+        <button id="clearFav" class="btn danger">Tümünü temizle</button>
+      </div>
+      <ol id="favList" class="results"></ol>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Akademik meta veriler <a href="https://openalex.org" target="_blank" rel="noopener">OpenAlex</a> ve <a href="https://www.crossref.org" target="_blank" rel="noopener">Crossref</a> açık API'lerinden, meteoroloji verileri <a href="https://aviationweather.gov" target="_blank" rel="noopener">aviationweather.gov</a>'dan alınır. Bu portal resmi bir kaynak değildir; operasyonel kararlar için yürürlükteki mevzuatı ve AIP'yi esas alın.</p>
+    </div>
+  </footer>
+
+  <template id="resultTpl">
+    <li class="result">
+      <div class="result-head">
+        <h3 class="title"><a target="_blank" rel="noopener"></a></h3>
+        <div class="badges"></div>
+      </div>
+      <p class="meta"></p>
+      <details class="abstract" hidden>
+        <summary>Özet</summary>
+        <p></p>
+      </details>
+      <div class="actions"></div>
+    </li>
+  </template>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
